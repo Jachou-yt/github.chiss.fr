@@ -1,79 +1,98 @@
 <template>
-  <div class="wrapper">
-    <img class="github-logo" src="src/assets/github.png" alt="GitHub Logo" />
-    <div class="categories">
-      <div class="category-column-container">
-        <div class="category-column" v-for="(column, index) in columns" :key="index">
-          <div class="category" v-for="repo in column" :key="repo.id">
-            <div class="category-title">{{ repo.name }}</div>
-            <div class="category-description" :style="{ '--max-lines': repo.description ? '5' : '0' }">
-              {{ repo.description }}
-            </div>
-            <div class="statistic">Statistiques :</div>
-            <div class="category-commits">{{ repo.commits }} commits</div>
-            <a :href="repo.html_url" target="_blank" class="category-link">Voir sur GitHub</a>
-            <div class="button" @mouseover="hover = true" @mouseleave="hover = false" :class="{'active': hover}">
-              {{ repo.language }}
-            </div>
-          </div>
+    <div class="wrapper">
+        <a href="https://github.com/Jachou-yt" target="_blank"><img class="github-logo" src="./assets/github.svg" alt="GitHub Logo" /></a>
+        <div v-if="isLoading" class="loading">
+            <div class="loading-text">Nous récupérons les données...</div>
         </div>
-      </div>
+        <div class="categories" v-else>
+            <div class="category-column-container">
+                <div class="category-column" v-for="(column, index) in columns" :key="index">
+                    <div class="category" v-for="repo in column" :key="repo.id">
+                        <div class="category-title">{{ repo.name }}</div>
+                        <div class="category-description" :style="{ '--max-lines': repo.description ? '5' : '0' }">
+                            {{ repo.description }}
+                        </div>
+                        <div class="statistic">Statistiques :</div>
+                        <div class="category-commits">{{ repo.commits }} commits</div>
+                        <a :href="repo.html_url" target="_blank" class="category-link">Voir sur GitHub</a>
+                        <div class="button">{{ repo.language }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
 </template>
 
 <script>
 export default {
-  name: 'App',
-  data() {
-    return {
-      repos: [],
-      columns: [],
-    };
-  },
-  mounted() {
-    this.fetchRepos();
-  },
-  methods: {
-    async fetchRepos() {
-      const response = await fetch('https://api.github.com/users/Jachou-yt/repos');
-      const repos = await response.json();
-      console.log(repos); // Ajout d'un console.log pour vérifier si les données sont bien récupérées
-      this.repos = repos.map((repo) => ({
-        ...repo,
-        commits: 0,
-      }));
-      await this.fetchCommits();
-      this.splitReposIntoColumns();
+    name: 'App',
+    data() {
+        return {
+            repos: [],
+            columns: [],
+            isLoading: true,
+        };
     },
-    async fetchCommits() {
-      for (let i = 0; i < this.repos.length; i++) {
-        const repo = this.repos[i];
-        const response = await fetch(`https://api.github.com/repos/Jachou-yt/${repo.name}/commits`);
-        const commits = await response.json();
-        this.repos[i].commits = commits.length;
-      }
+    mounted() {
+        this.fetchRepos();
     },
-    splitReposIntoColumns() {
-      const reposPerColumn = 3;
-      const totalRepos = this.repos.length;
-      const totalColumns = Math.ceil(totalRepos / reposPerColumn);
-      const columns = Array.from({ length: totalColumns }, () => []);
+    methods: {
+        async fetchRepos() {
+            const response = await fetch('https://api.github.com/users/Jachou-yt/repos');
+            const repos = await response.json();
+            console.log(repos);
+            this.repos = repos.map((repo) => ({
+                ...repo,
+                commits: 0,
+            }));
+            await this.fetchCommits();
+            this.splitReposIntoColumns();
+            this.isLoading = false;
+        },
+        async fetchCommits() {
+            for (let i = 0; i < this.repos.length; i++) {
+                const repo = this.repos[i];
+                const response = await fetch(`https://api.github.com/repos/Jachou-yt/${repo.name}/commits`);
+                const commits = await response.json();
+                this.repos[i].commits = commits.length;
+            }
+        },
+        splitReposIntoColumns() {
+            const reposPerColumn = 1;
+            const totalRepos = this.repos.length;
+            const totalColumns = Math.ceil(totalRepos / reposPerColumn);
+            const columns = Array.from({length: totalColumns}, () => []);
 
-      for (let i = 0; i < totalRepos; i++) {
-        const columnIndex = Math.floor(i / reposPerColumn);
-        columns[columnIndex].push(this.repos[i]);
-      }
+            for (let i = 0; i < totalRepos; i++) {
+                const columnIndex = Math.floor(i / reposPerColumn);
+                columns[columnIndex].push(this.repos[i]);
+            }
 
-      this.columns = columns;
+            this.columns = columns;
+        },
     },
-  },
 };
 </script>
 
 <style>
 @import "assets/main.css";
 @import './assets/base.css';
+
+.loading {
+    position: relative;
+}
+
+.loading {
+    position: relative;
+}
+
+.loading-text {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--color-primary);
+}
+
+
 
 .statistic {
   font-weight: bold;
@@ -85,9 +104,15 @@ export default {
   margin-bottom: 1rem;
 }
 
+.category-link {
+    color: var(--color-heading);
+    text-decoration: none;
+}
+
 
 :root {
   --max-lines: 5;
+  --color-primary: --color-heading;
 }
 
 .categories {
@@ -149,11 +174,6 @@ export default {
 }
 
 
-.wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
 
 .github-logo {
   margin-top: 2rem;

@@ -1,2 +1,2 @@
 # Chiss
-[Chiss.fr](https://chiss.fr)
+[github.chiss.fr](https://github.chiss.fr)
